@@ -8,6 +8,7 @@ A la hora de realizar la conexión entre ellos, se puede tomar como referencia q
 ![La imagen no se ha cargado correctamente](https://github.com/sanchezco/proyecto_scanner3D/blob/master/Imgs/CNC%20Shield.PNG "CNC Shield y Pololu")
 En el lado izquierdo del driver se encuentran cuatro pines correspondientes al motor (1A,1B,2A,2B), y en el derecho los pines que se utilizaran para conectarlo con la FPGA.
 Justo debajo del drivers se encuentran los pines MS1, MS2 y MS3 en los cuales se pueden poner los jumpers para modificar la resolución de los micropasos del motor. Por el momento se trabajará con el modo paso completo (sin utilizar ningún jumper), el modo de configurar la resolución de los pasos es el siguiente:
+
 ![La imagen no se ha cargado correctamente](https://github.com/sanchezco/proyecto_scanner3D/blob/master/Imgs/A4988%20Stepper%20Motor%20Driver%20Carrier.png)
 
 Para evitar dañar los compoenentes es muy importante apagar la fuente de tensión de la cnc shield antes de colocar o quitar el driver.
