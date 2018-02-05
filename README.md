@@ -1,8 +1,8 @@
 # Proyecto_Scanner3D
 
 El proyecto consiste en el diseño y control del sistema de movimiento de un prototipo de Scanner3D.
-
 Los puntos más destacados son:
+
 ---
 - **Material**
     - FPGA: Nexys 4 
