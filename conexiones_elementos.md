@@ -4,22 +4,7 @@ Es muy importante realizar una conexión adecuada entre los distintos elementos 
  **CNC Shield**:
 Se emplea para facilitar el control de los motores paso a paso, con ella se utilizarán el modelo de driver Pololu A4988.
 A la hora de realizar la conexión entre ellos, se puede tomar como referencia quel pin "enable" del pololu coincida con el de la placa.
-![La imagen no se ha cargado correctamente](https://github.com/sanchezco/proyecto_scanner3D/blob/master/Imgs/cnc_shield.jpg "CNC Shield")![La imagen no se ha cargado correctamente](https://github.com/sanchezco/proyecto_scanner3D/blob/master/Imgs/pololu_A4988.png "Driver Pololu A4988")
-
-
-
-
-De esta forma podrías insertar una imagen
-![CNC Shield][img1]
-
-O dos, sin ensuciar tu espacio de escritura.
-![Pololu][img2] 
-
-[img1]: https://github.com/sanchezco/proyecto_scanner3D/blob/master/Imgs/cnc_shield.jpg "CNC Shield"
-[img2]: https://github.com/sanchezco/proyecto_scanner3D/blob/master/Imgs/pololu_A4988.png "Driver Pololu A4988"
-
-
-
+![La imagen no se ha cargado correctamente](https://github.com/sanchezco/proyecto_scanner3D/blob/master/Imgs/cnc_shield.jpg "CNC Shield y Pololu")
 
 Para evitar dañar los compoenentes es muy importante apagar la fuente de tensión de la cnc shield antes de colocar o quitar el driver.
 También es importante utilizar un soporte para que no haya contacto en los pines de la parte inferior de la placa.
