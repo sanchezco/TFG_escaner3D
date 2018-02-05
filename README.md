@@ -4,7 +4,7 @@ El proyecto consiste en el diseño y control del sistema de movimiento de un pro
 
 Los puntos más destacados son:
 
-- [**Material utilizado**](https://github.com/sanchezco/proyecto_scanner3D/blob/master/material.md)
+- [**Material**](https://github.com/sanchezco/proyecto_scanner3D/blob/master/material.md)
 
 - [**Control del motor paso a paso con VHDL**](https://github.com/sanchezco/proyecto_scanner3D/blob/master/control_stepper_motor.md)
 
