@@ -1,1 +1,3 @@
-# proyecto_scanner3D
+# MATERIAL:
+
+- FPGA: Nexys 4 ![La imagen no se ha cargado correctamente](https://github.com/sanchezco/proyecto_scanner3D/blob/master/Imgs/nexys-4.png "Nexys4")
