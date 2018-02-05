@@ -11,9 +11,9 @@ Los puntos más destacados son:
     - Fuente de alimentación PC 
     - Motor paso a paso: Wantai Mini Stepper 42BYGHW811 
 ---
-- [**Control del motor paso a paso con VHDL**](https://github.com/sanchezco/proyecto_scanner3D/blob/master/control_stepper_motor.md)
----
 - [**Conexión entre elementos**](https://github.com/sanchezco/proyecto_scanner3D/blob/master/conexiones_elementos.md)
+---
+- [**Control del motor paso a paso con VHDL**](https://github.com/sanchezco/proyecto_scanner3D/blob/master/control_stepper_motor.md)
 ---
 
 *Ejemplo: BQ Ciclop*
