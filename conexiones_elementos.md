@@ -7,7 +7,7 @@ Se emplea para facilitar el control de los motores paso a paso, con ella se util
 A la hora de realizar la conexión entre ellos, se puede tomar como referencia quel pin "enable" del pololu coincida con el de la placa.
 ![La imagen no se ha cargado correctamente](https://github.com/sanchezco/proyecto_scanner3D/blob/master/Imgs/CNC%20Shield.PNG "CNC Shield y Pololu")
 Justo debajo del drivers se encuentran los pines MS1, MS2 y MS3 en los cuales se pueden poner los jumpers para configurar la resolución de los micropasos del motor.
-![La imagen no se ha cargado correctamente (https://github.com/sanchezco/proyecto_scanner3D/blob/master/Imgs/A4988%20Stepper%20Motor%20Driver%20Carrier.png )
+![La imagen no se ha cargado correctamente] (https://github.com/sanchezco/proyecto_scanner3D/blob/master/Imgs/A4988%20Stepper%20Motor%20Driver%20Carrier.png )
 
 Por el momento no es necesario una resolución tan minuciosa y se trabajará con el modo paso completo (sin utilizar ningún jumper).
 
