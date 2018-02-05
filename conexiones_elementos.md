@@ -12,7 +12,7 @@ Justo debajo del drivers se encuentran los pines MS1, MS2 y MS3 en los cuales se
 ![La imagen no se ha cargado correctamente](https://github.com/sanchezco/proyecto_scanner3D/blob/master/Imgs/A4988%20Stepper%20Motor%20Driver%20Carrier.png)
 
 Para evitar dañar los compoenentes es muy importante apagar la fuente de tensión de la cnc shield antes de colocar o quitar el driver.
-También es importante utilizar un soporte para que no haya contacto en los pines de la parte inferior de la placa.
+También para evitar el contacto en los pines de la parte inferior de la placa es conveniente utilizar un soporte.
 **Ajuste de la corriente del driver...**
 
 ---
@@ -20,11 +20,10 @@ También es importante utilizar un soporte para que no haya contacto en los pine
 Una vez obtenidas las variables STEP, DIR y ENABLE se les asigna los pines de salidas:   
 ![La imagen no se ha cargado correctamente](https://github.com/sanchezco/proyecto_scanner3D/blob/master/Imgs/FPGA_pinOut.png "FPGA pin outs")
 Se realizará un crimpado de los cables para conectar la FPGA con la CNC Shield, ya que a diferencia de Arduino no se puede conectar directamente. 
-
 La CNC shield no puede alimentar a la FPGA y por lo tanto esta requiere su propio suministro de tensión. 
 
 ---
-**MOTOR PASP A PASO**:
+**MOTOR PASO A PASO**:
 El motor tiene cuatro cables correspondientes a sus dos bobinas, a la hora de hacer el crimpado se debe conocer que cables corresponden a cada bobina.
 No importa el orden ya que este solo define el sentido del giro, pero si es preciso que los dos primeros pines correspondan a una bobina (2B y 2A) y los dos siguientes a la otra (1A y 1B).
 ![La imagen no se ha cargado correctamente](https://github.com/sanchezco/proyecto_scanner3D/blob/master/Imgs/pololu_A4988.png "pololu")
