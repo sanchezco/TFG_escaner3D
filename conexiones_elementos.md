@@ -13,6 +13,7 @@ Justo debajo del drivers se encuentran los pines MS1, MS2 y MS3 en los cuales se
 
 Para evitar dañar los compoenentes es muy importante apagar la fuente de tensión de la cnc shield antes de colocar o quitar el driver.
 También para evitar el contacto en los pines de la parte inferior de la placa es conveniente utilizar un soporte.
+
 **Ajuste de la corriente del driver...**
 
 ---
