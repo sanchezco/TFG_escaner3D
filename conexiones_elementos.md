@@ -2,7 +2,7 @@
 Es muy importante realizar una conexión adecuada entre los distintos elementos para que todo funcione correctamente y evitar daños en los componentes.
 
  **CNC Shield**:
-Esta placa se emplea para facilitar el control de los motores paso a paso, con ella se utilizarán el modelo de driver Pololu A4988.
+Se emplea para facilitar el control de los motores paso a paso, con ella se utilizarán el modelo de driver Pololu A4988.
 A la hora de realizar la conexión entre ellos, se puede tomar como referencia quel pin "enable" del pololu coincida con el de la placa.
 
 
