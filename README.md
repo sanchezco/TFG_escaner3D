@@ -10,4 +10,4 @@ Los puntos más destacados son:
 
 - [**Conexiones entre los elementos**](https://github.com/sanchezco/proyecto_scanner3D/blob/master/conexiones_elementos.md)
 
-![*Ejemplo de Scanner 3D: BQ Ciclop*](D:\UNIVERSIDAD\TFG\Imagenes_TFG\ciclop)
+![Ejemplo de Scanner 3D: BQ Ciclop](D:\UNIVERSIDAD\TFG\Imagenes_TFG\ciclop)
