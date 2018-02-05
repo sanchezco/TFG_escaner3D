@@ -10,5 +10,5 @@ Los puntos más destacados son:
 
 - [**Conexiones entre los elementos**](https://github.com/sanchezco/proyecto_scanner3D/blob/master/conexiones_elementos.md)
 
-![](https://github.com/sanchezco/proyecto_scanner3D/blob/master/Imgs/unnamed.jpg)
+![](https://github.com/sanchezco/proyecto_scanner3D/blob/master/Imgs/unnamed.jpg"*Ejemplo de Scanner 3: BQ Ciclops*")
 
