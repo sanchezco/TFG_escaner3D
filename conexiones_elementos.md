@@ -18,6 +18,7 @@ También es importante utilizar un soporte para que no haya contacto en los pine
 Una vez obtenidas las variables STEP, DIR y ENABLE se les asigna los pines de salidas:   
 ![La imagen no se ha cargado correctamente](https://github.com/sanchezco/proyecto_scanner3D/blob/master/Imgs/FPGA_pinOut.png "FPGA pin outs")
 Se realizará un crimpado de los cables para conectar la FPGA con la CNC Shield, ya que a diferencia de Arduino no se puede conectar directamente. 
+
 La CNC shield no puede alimentar a la FPGA y por lo tanto esta requiere su propio suministro de tensión. 
 
 ---
