@@ -26,4 +26,5 @@ La CNC shield no puede alimentar a la FPGA y por lo tanto esta requiere su propi
 **MOTOR PASO A PASO**:
 El motor tiene cuatro cables correspondientes a sus dos bobinas, a la hora de hacer el crimpado se debe conocer que cables corresponden a cada bobina.
 No importa el orden ya que este solo define el sentido del giro, pero si es preciso que los dos primeros pines correspondan a una bobina (2B y 2A) y los dos siguientes a la otra (1A y 1B).
+
 ![La imagen no se ha cargado correctamente](https://github.com/sanchezco/proyecto_scanner3D/blob/master/Imgs/pololu_A4988.png "pololu")
