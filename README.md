@@ -1,6 +1,6 @@
 # Proyecto_Scanner3D
 
-El proyecto consiste en el diseño y control del sistema de movimiento de un prototipo de scanner 3D.
+El proyecto consiste en el diseño y control del sistema de movimiento de un prototipo de Scanner3D.
 
 Los puntos más destacados son:
 
