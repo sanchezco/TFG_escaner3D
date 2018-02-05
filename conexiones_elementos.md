@@ -5,7 +5,9 @@ Es muy importante realizar una conexión adecuada entre los distintos elementos 
  **CNC Shield**:
 Se emplea para facilitar el control de los motores paso a paso, con ella se utilizarán el modelo de driver Pololu A4988.
 A la hora de realizar la conexión entre ellos, se puede tomar como referencia quel pin "enable" del pololu coincida con el de la placa.
+
 ![La imagen no se ha cargado correctamente](https://github.com/sanchezco/proyecto_scanner3D/blob/master/Imgs/CNC%20Shield.PNG "CNC Shield y Pololu")
+
 Justo debajo del drivers se encuentran los pines MS1, MS2 y MS3 en los cuales se pueden poner los jumpers para modificar la resolución de los micropasos del motor. Por el momento se trabajará con el modo paso completo (sin utilizar ningún jumper), el modo de configurar la resolución de los pasos es el siguiente:
 
 ![La imagen no se ha cargado correctamente](https://github.com/sanchezco/proyecto_scanner3D/blob/master/Imgs/A4988%20Stepper%20Motor%20Driver%20Carrier.png)
@@ -19,6 +21,7 @@ También es importante utilizar un soporte para que no haya contacto en los pine
 ---
  **FPGA**:
 Una vez obtenidas las variables STEP, DIR y ENABLE se les asigna los pines de salidas:   
+
 ![La imagen no se ha cargado correctamente](https://github.com/sanchezco/proyecto_scanner3D/blob/master/Imgs/FPGA_pinOut.png "FPGA pin outs")
 
 Se realizará un crimpado de los cables para conectar la FPGA con la CNC Shield, ya que a diferencia de Arduino no se puede conectar directamente. 
