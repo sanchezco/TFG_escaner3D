@@ -15,7 +15,6 @@ Los puntos más destacados son:
 ---
 - [**Control del motor paso a paso con VHDL**](https://github.com/sanchezco/proyecto_scanner3D/blob/master/control_stepper_motor.md)
 ---
-
-*Ejemplo: BQ Ciclop*
-
-![La imagen no se ha cargado correctamente](https://github.com/sanchezco/proyecto_scanner3D/blob/master/Imgs/unnamed.jpg "Ejemplo de Scanner 3: BQ Ciclops")
+---
+- [**Piezas**](https://github.com/sanchezco/proyecto_scanner3D/blob/master/control_stepper_motor.md)
+---
