@@ -16,5 +16,5 @@ Los puntos más destacados son:
 - [**Control del motor paso a paso con VHDL**](https://github.com/sanchezco/proyecto_scanner3D/blob/master/control_stepper_motor.md)
 ---
 ---
-- [**Piezas stl**](https://github.com/sanchezco/proyecto_scanner3D/tree/master/STL)
+- [**Piezas STL**](https://github.com/sanchezco/proyecto_scanner3D/tree/master/STL)
 ---
