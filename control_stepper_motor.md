@@ -1,1 +1,0 @@
-# proyecto_scanner3D
