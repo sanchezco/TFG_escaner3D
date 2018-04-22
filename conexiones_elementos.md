@@ -29,8 +29,9 @@ Respecto a la alimentación de la CNC Shield hay que distinguir entre:
 ### **Ajuste de la corriente del driver**
   Es preciso calibrar el Pololu en función de su apliación, aumentar el voltaje generalmente permite mayores pasos y mayor torque.
   Una de las posibles formas de calibrarlo es calcular el voltaje de referencia, empleando la fórmula: **Vref = 8 Imax Rcs**
- Donde: - Rcs es la resistencia del pololu, en el pololu utilizado la resisitencia es R100 que se corresponde con 0,1 Ohmios.
-        - Imax se define como la raiz de la suma al cuadrado del liímite de cada bobina, para el motor utilizado es de 1A por bobina.
+ Donde: 
+ * Rcs es la resistencia del pololu, en el pololu utilizado la resisitencia es R100 que se corresponde con 0,1 Ohmios.
+ * Imax se define como la raiz de la suma al cuadrado del liímite de cada bobina, para el motor utilizado es de 1A por bobina.
    
    Para medir el voltaje de referencia se coloca el polímetro en paralelo al potenciómetro:
    
