@@ -7,7 +7,7 @@ El proyecto abarca el diseño y fabricación de las piezas, construcción de la 
 ---
 - [**Documentación completa del proyecto**]
 ---
-- [**Piezas diseñadas en .STL**](https://github.com/sanchezco/proyecto_scanner3D/tree/master/STL): 
+- [**Pizas impresas (STL)**](https://github.com/sanchezco/proyecto_scanner3D/tree/master/STL): 
 ---
-- [**Códigos de descripción de hardware del prototipo (VHDL)**](https://github.com/sanchezco/proyecto_scanner3D/tree/master/VHDL)
+- [**Códigos de descripción de hardware (VHDL)**](https://github.com/sanchezco/proyecto_scanner3D/tree/master/VHDL)
 ---
