@@ -9,6 +9,6 @@ El proyecto abarca el diseño y fabricación de las piezas, construcción de la 
 ---
 - [**Códigos de descripción de hardware (VHDL)**](https://github.com/sanchezco/proyecto_scanner3D/tree/master/VHDL)
 ---
-- [**Documentación completa del proyecto**]
+- [**Documentación completa del proyecto**](https://github.com/sanchezco/proyecto_scanner3D/tree/master/Documentaci%C3%B3n)
 ---
 ![La imagen no se ha cargado correctamente](https://github.com/sanchezco/proyecto_scanner3D/blob/master/Imgs/Modelado_Esc%C3%A1ner.png)
