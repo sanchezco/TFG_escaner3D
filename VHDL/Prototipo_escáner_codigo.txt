@@ -1,0 +1,822 @@
+----------------------------------------------------------------------------------
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+
+
+entity INTERFAZ is
+Port ( 
+       BTND : in std_logic;
+       BTNI : in std_logic;
+		 btn_mas   : in STD_LOGIC;  --BTN: 
+		 btn_menos : in STD_LOGIC;  --BTN:
+
+       sw_on: in  STD_LOGIC; -- Enciende o apaga el escaner
+       sw_escanear: in STD_LOGIC; -- activa el estado de funcionamiento
+       sw_config: in STD_LOGIC;  -- activa el estado de ajuste
+       
+       seg: out  STD_LOGIC_VECTOR (6 downto 0);--Vector que identifica cada uno de los segmentos del display.
+       an: out  STD_LOGIC_VECTOR (3 downto 0);--Vector que enciende los anodos
+      
+       reset: in  STD_LOGIC;--para resetear el sistema
+       clk:   in  STD_LOGIC; --la señal de reloj
+			
+	    LED1 : out STD_LOGIC; 
+    	 LED2 : out STD_LOGIC;
+		 
+		 endstop_x_mas : in STD_LOGIC; -- final de carrera JB1
+       endstop_x_menos : in STD_LOGIC; -- final de carrera JB7 
+		 DIR_x  : out STD_LOGIC;  
+       STEP_x : out STD_LOGIC;  
+		 
+		 endstop_y_mas : in STD_LOGIC; -- final de carrera JB1
+       endstop_y_menos : in STD_LOGIC; -- final de carrera JB7 
+		 DIR_y  : out STD_LOGIC;  
+       STEP_y : out STD_LOGIC;  
+		 
+		 DIR_R  : out STD_LOGIC; 
+		 STEP_R : out STD_LOGIC; 
+		 
+       ENABLE : out STD_LOGIC);
+		 
+end INTERFAZ;
+
+architecture Behavioral of INTERFAZ is
+
+-----------ESTADOS--------------
+    type estado_pantalla is (onoff, inicio, escanear, configuracion, pos_desli, pos_cam, vel_rot, error,vel_1,vel_3); --home
+-----------CAMBIO DE ESTADO------
+    signal estado_actual, estado_siguiente: estado_pantalla;
+-----------ESTADOS DEL DETECTOR--------------
+    type estado_flanco is (s0000, s0001, s0010, s0011, s0100, s0101, s0110, s0111, s1000, s1001 ); --, s1000
+	 
+ --SEÑALES  SALIDA DEL BIESTABLE
+   signal boton_der: STD_LOGIC;
+   signal boton_izq: STD_LOGIC;
+   signal BTN0_DER1: STD_LOGIC;
+   signal BTN0_DER2: STD_LOGIC;
+   signal BTN0_IZQ1: STD_LOGIC;
+   signal BTN0_IZQ2: STD_LOGIC;
+---- Biestables:
+   signal pulso_btn_mas: std_logic;
+   signal btn_mas_reg1: std_logic; 
+   signal btn_mas_reg2: std_logic;   
+	signal senal_mas: std_logic;   
+   signal pulso_btn_menos: std_logic;
+   signal btn_menos_reg1: std_logic; 
+   signal btn_menos_reg2: std_logic;  
+	signal senal_menos: std_logic;  
+
+--SEÑALES INTERMEDIAS QUE CORRESPONDEN CON LA SEÑAL DE ELEGIR DEL MULTIPLESOR   
+   signal mili: natural range 0 to 2**17-1; ---lleva la cuenta que corresponde con un milisegundo
+   constant cimilis: natural:= 100000;-- hasta donde queremos contar como máximo (1ms) / (1seg = 100.000.000)
+   signal cuenta4ms: unsigned (1 downto 0);--Numero real.Solo se neceitan 3 bits para los 4 anados.
+   
+--SEÑAL CONTADORES--
+  constant cincuenta: natural:= 10000000;-- hasta donde queremos contar como máximo ( 100MHz ---> 1 seg )
+  signal s1mili: STD_LOGIC;
+
+--señal tiempo entre pasos----
+  signal ta: unsigned(16 downto 0); 
+  signal ty: unsigned(16 downto 0); 
+  signal t_vertical: unsigned(16 downto 0); 
+  signal tr: unsigned(16 downto 0);  -- 16 
+ 
+--señales para el funcionamiento de los motores  
+     signal cuenta_step_x: unsigned(16 downto 0);  --ajustar
+     signal cuenta_step_y: unsigned(16 downto 0); 
+	  signal cuenta_step_r: unsigned(16 downto 0); --20
+	  signal cuenta_step_vertical: unsigned(16 downto 0);
+	  
+     signal dir_in_x: std_logic;
+     signal step_in_x: std_logic; -- variable intermedia que da el valor a la salida STEP deslizadera    
+     signal activa_step_x: std_logic; --activa el proceso STEP deslizadera
+	  
+	  signal dir_in_y: std_logic;
+     signal step_in_y: std_logic; -- variable intermedia que da el valor a la salida STEP camara
+     signal activa_step_y: std_logic; --activa el proceso STEP camara
+	  
+	  signal step_in_vertical: std_logic;
+	  signal s_paso_vertical: std_logic;
+	  signal cuenta_pasos_vertical: unsigned (11 downto 0);
+	  constant pasos_verticales: natural:= 1600;
+	  signal stop_vertical: std_logic;
+	  
+	  signal step_in_r: std_logic;
+	  signal dir_in_r: std_logic;
+	  signal stop_r: std_logic;
+	  signal s_paso_r: std_logic;
+	  signal cuenta_pasos_r: unsigned (13 downto 0); -- lleva la cuenta de los 200 pasos
+	  constant pasos_rev: natural:= 6400; --¿por que no 3200?
+	  
+--	  signal dir_in_home: std_logic;
+--     signal activa_step_home: std_logic; -- 
+----	  signal step_in_home: std_logic;
+ --    signal s_home: std_logic; --
+	  
+--finales de carrera
+	  signal stop_fin_x: std_logic;
+     signal stop_inicio_x: std_logic;
+	  signal stop_fin_y: std_logic;
+     signal stop_inicio_y: std_logic;
+	
+---Señal de los procesos de configuracion
+     signal s_camara: std_logic;
+     signal s_deslizadera: std_logic;
+	  signal s_escanear: std_logic;
+	  
+-----Valor asignado a la salida ENABLE
+     constant en_pololu_on: std_logic:='0'; -- en el pololu el enable es a nivel bajo
+
+begin
+
+ ta   <= to_unsigned(90000,17);   --modifica la velocidad de la deslizadera, tiempo que la señal step está a 1 y a 0
+ ty   <= to_unsigned(20000,17);   --modifica la velocidad de la camara
+ t_vertical <= to_unsigned(90000,17); 
+ tr   <= to_unsigned(90000,17);   --(720000,20); 
+
+ 
+-- Cambio_velocidad: Process (clk,reset)
+-- begin
+--	if reset = '1' then
+--	    tb <= to_unsigned(90000,17);
+--     elsif clk' event and clk='1' then
+--     if estado_actual = vel_rot then
+--	      tb <= to_unsigned(90000,17);
+--	     elsif estado_actual = vel_1 then
+--	      tb <= to_unsigned(135000,17);
+--	  	  elsif estado_actual = vel_3 then
+--	      tb <= to_unsigned(45000,17);
+--	  end if;
+--	end if;
+-- end process;
+ 
+  Signal_escaneo: Process (clk,reset)
+    begin
+     if reset='1' then
+        s_escanear<='0';
+     elsif clk' event and clk='1' then
+     if estado_actual = escanear then
+        s_escanear <='1';
+		else
+		   s_escanear <='0';
+        end if;
+        end if;
+     end process;	 
+ 
+ ENABLE <= en_pololu_on;  -- enable siempre activo
+ 
+ 
+P_cambio_estado: Process (estado_actual, boton_der, boton_izq, sw_on, sw_escanear, sw_config, pulso_btn_mas, pulso_btn_menos) --, s_casa
+begin
+    case estado_actual is 
+    --------------------ENCENDIDO O APAGADO-------------
+        when onoff =>  
+             if sw_on = '1' then 
+ --               estado_siguiente <= home;
+					estado_siguiente <= inicio;
+             else
+                estado_siguiente <= onoff;
+           end if;			     
+--    --------------------HOME------------- 
+--		when home =>  
+--             if sw_on = '0' then
+--					estado_siguiente <= onoff;
+--				 elsif s_home ='1' then
+--					estado_siguiente <= inicio;
+--				 else
+--               estado_siguiente <= home;			
+--		
+--           end if;	
+    --------------------INICIO-------------
+        when inicio=> 
+             if sw_on = '0' then 
+           estado_siguiente <= onoff;
+           elsif sw_escanear = '1' then 
+               estado_siguiente <= escanear;
+           elsif sw_config = '1' then 
+               estado_siguiente <= configuracion;
+            else
+               estado_siguiente <= inicio;
+          end if;        
+  -------------------- PROCESO DE ESCANEADO-------------
+     when escanear => 
+        if sw_on = '0' then 
+           estado_siguiente <= onoff;
+           elsif sw_escanear = '0' then 
+               estado_siguiente <= inicio;
+           elsif sw_config = '1' then 
+                   estado_siguiente <= error;
+            else
+               estado_siguiente <= escanear;
+          end if;
+ -------------------- CONFIGURACION-------------
+        when configuracion => 
+        if sw_on = '0' then 
+           estado_siguiente <= onoff;
+           elsif sw_config = '0' then 
+               estado_siguiente <= inicio;	
+           elsif boton_der = '1' then
+               estado_siguiente <= pos_desli;
+           elsif boton_izq = '1' then
+               estado_siguiente <= vel_rot;
+           elsif sw_escanear = '1' then 
+                   estado_siguiente <= error;
+            else
+               estado_siguiente <= configuracion;
+					end if;         
+ -------------------- ERROR-------------
+         when error => 
+         if sw_on = '0' then 
+            estado_siguiente <= onoff;
+            elsif sw_escanear = '0' then 
+                estado_siguiente <= configuracion;
+            elsif sw_config = '0' then 
+                    estado_siguiente <= escanear;
+             else
+                estado_siguiente <= error;
+           end if;                 
+ --------------------AJUSTE DE LA BASE HORIZONTAL-------------             
+           when pos_desli => 
+           if sw_on = '0' then 
+              estado_siguiente <= onoff;
+              elsif sw_config = '0' then 
+                  estado_siguiente <= inicio;
+              elsif boton_der = '1' then
+                  estado_siguiente <= pos_cam;
+               elsif boton_izq = '1' then
+                  estado_siguiente <= vel_rot;
+               else
+                  estado_siguiente <= pos_desli;
+             end if;              
+   --------------------AJUSTE POSICION CAMARA-------------             
+             when pos_cam=> 
+             if sw_on = '0' then 
+                estado_siguiente <= onoff;
+                elsif sw_config = '0' then 
+                    estado_siguiente <= inicio;
+                elsif boton_der = '1' then
+                    estado_siguiente <= vel_rot;
+                elsif boton_izq = '1' then
+                    estado_siguiente <= pos_desli;
+                 else
+                    estado_siguiente <= pos_cam;
+               end if;  
+   --------------------AJUSTE VELOCIDAD ROTACION-------------             
+           when vel_rot => 
+           if sw_on = '0' then 
+              estado_siguiente <= onoff;
+              elsif sw_config = '0' then 
+                  estado_siguiente <= inicio;
+              elsif boton_der = '1' then
+                  estado_siguiente <= pos_desli;
+              elsif boton_izq = '1' then
+                  estado_siguiente <= pos_cam;
+				 elsif pulso_btn_menos = '1' then
+				       estado_siguiente <= vel_3;
+				 elsif pulso_btn_mas = '1' then
+				       estado_siguiente <= vel_1;
+               else
+                  estado_siguiente <= vel_rot;
+             end if; 
+	 --------------------AJUSTE VELOCIDAD 1-------------             
+           when vel_1 => 
+           if sw_on = '0' then 
+              estado_siguiente <= onoff;
+              elsif sw_config = '0' then 
+                  estado_siguiente <= inicio;
+              elsif boton_der = '1' then
+                  estado_siguiente <= pos_desli;
+              elsif boton_izq = '1' then
+                  estado_siguiente <= pos_cam;
+				 elsif pulso_btn_menos = '1' then
+				       estado_siguiente <= vel_rot;
+               else
+                  estado_siguiente <= vel_1;
+             end if; 			 
+	 --------------------AJUSTE VELOCIDAD 3-------------             
+           when vel_3 => 
+           if sw_on = '0' then 
+              estado_siguiente <= onoff;
+              elsif sw_config = '0' then 
+                  estado_siguiente <= inicio;
+              elsif boton_der = '1' then
+                  estado_siguiente <= pos_desli;
+              elsif boton_izq = '1' then
+                  estado_siguiente <= pos_cam;
+				 elsif pulso_btn_mas= '1' then
+				       estado_siguiente <= vel_rot;
+               else
+                  estado_siguiente <= vel_3;
+             end if; 			 				 
+    end case;               
+end process;
+
+----------PROCESO--------------
+---Biestable D: proceso secuencia que actualiza el estado cada cilco de reloj y lo guarda en un biesteble.    
+p_secuencia: Process (reset, clk)
+    begin
+    if reset='1' then
+        estado_actual <= inicio;
+    elsif clk'event and clk= '1' then
+        estado_actual <= estado_siguiente;
+    end if;
+    end process;    
+
+--------PROCESO COMINACIONAL DE SALIDAS.--------
+    P_combinacional_salidas: Process (estado_actual, clk, reset, cuenta4ms)
+    begin
+  case estado_actual is
+   --------------------ESTADO ON/OFF-------------
+        when onoff => 
+               if cuenta4ms= "00" then                  
+                            seg(6 downto 0) <= "1000000";
+                elsif cuenta4ms= "01" then
+                            seg(6 downto 0) <= "0001110";
+                elsif cuenta4ms= "10" then
+                            seg(6 downto 0) <= "0001110"; 
+                elsif cuenta4ms= "11" then
+                            seg(6 downto 0) <= "1111111";
+						else
+						seg(6 downto 0) <= "1111111";
+               end if;
+         
+ --------------------INICIO--------------
+       when inicio =>  -- En este estado muestro "Inic" por pantalla
+             if   cuenta4ms= "00" then                  
+                           seg(6 downto 0) <= "1001111";  
+              elsif cuenta4ms= "01" then
+                           seg(6 downto 0) <= "0101011"; 
+              elsif cuenta4ms= "10" then
+                           seg(6 downto 0) <= "1111011";  
+              elsif cuenta4ms= "11" then
+                           seg(6 downto 0) <= "0100111"; 
+					else
+						seg(6 downto 0) <= "1111111";
+              end if;       
+ -------------------- ESCANEAR--------------
+        when escanear =>  -- En este estado muestro "SCAn" 
+              if   cuenta4ms= "00" then                  
+                            seg(6 downto 0) <= "0010010";
+               elsif cuenta4ms= "01" then
+                            seg(6 downto 0) <= "1000110";
+               elsif cuenta4ms= "10" then
+                            seg(6 downto 0) <= "0001000"; 
+               elsif cuenta4ms= "11" then
+                            seg(6 downto 0) <= "0101011"; 
+						else
+						seg(6 downto 0) <= "1111111";
+               end if;                                                                       
+ --------------------CONFIGURACION-------------
+         when configuracion =>   -- Muestro el mensaje Conf por pantalla
+             if   cuenta4ms= "00" then                        
+                          seg(6 downto 0) <= "1000110";
+            elsif cuenta4ms= "01" then
+                          seg(6 downto 0) <= "0100011";
+            elsif cuenta4ms= "10" then
+                          seg(6 downto 0) <= "0101011"; 
+            elsif cuenta4ms= "11" then
+                          seg(6 downto 0) <= "0001110"; 
+					else
+						seg(6 downto 0) <= "1111111";
+            end if; 
+ --------------------MENSAJE DE ERROR-------------- 
+           
+      when error =>  -- Error: cuendo me encuentro en el estado de configuracion y le doy a empezar escaneo
+               if   cuenta4ms= "00" then                 
+                          seg(6 downto 0) <= "0000110";  
+                 elsif cuenta4ms= "01" then
+                          seg(6 downto 0) <= "0101111"; 
+                 elsif cuenta4ms= "10" then
+                          seg(6 downto 0) <= "0101111";  
+                 elsif cuenta4ms= "11" then
+                          seg(6 downto 0) <= "0100011"; 
+						 else
+						seg(6 downto 0) <= "1111111";
+                end if;                                  
+ --------------------POSICION DE LA BASE-------------             
+        when pos_desli =>  -- Muestra en el display B- "ajuste de la base"
+              if   cuenta4ms= "00" then                        
+                            seg(6 downto 0) <= "0000000";
+               elsif cuenta4ms= "01" then
+                            seg(6 downto 0) <= "0111111";
+               elsif cuenta4ms= "10" then
+                            seg(6 downto 0) <= "1111111"; 
+               elsif cuenta4ms= "11" then
+                            seg(6 downto 0) <= "1111111"; 
+						else
+						seg(6 downto 0) <= "1111111";
+               end if; 					
+ --------------------POSICION DE LA CAMARA/SENSOR-------------             
+          when pos_cam=>  -- Muestra en el display C- "ajuste de la cámara"
+                if   cuenta4ms= "00" then                        
+                              seg(6 downto 0) <= "1000110";
+                 elsif cuenta4ms= "01" then
+                              seg(6 downto 0) <= "0111111";
+                 elsif cuenta4ms= "10" then
+                              seg(6 downto 0) <= "1111111"; 
+                 elsif cuenta4ms= "11" then
+                              seg(6 downto 0) <= "1111111"; 
+							else
+						seg(6 downto 0) <= "1111111";
+                 end if;              
+ -------------------- VELOCIDAD DE ROTACION-------------             
+        when vel_rot =>  -- Muestra en el display U- "
+              if   cuenta4ms= "00" then                        
+                            seg(6 downto 0) <= "1000001";
+               elsif cuenta4ms= "01" then
+                            seg(6 downto 0) <= "0111111";
+               elsif cuenta4ms= "10" then
+                            seg(6 downto 0) <= "1000000"; 
+               elsif cuenta4ms= "11" then
+                            seg(6 downto 0) <= "0100100"; 
+					else
+						seg(6 downto 0) <= "1111111"; 
+               end if; 
+ -------------------- VELOCIDAD DE ROTACION 2 -------------             
+        when vel_1 =>  -- Muestra en el display U- "
+              if   cuenta4ms= "00" then                        
+                            seg(6 downto 0) <= "1000001";
+               elsif cuenta4ms= "01" then
+                            seg(6 downto 0) <= "0111111";
+               elsif cuenta4ms= "10" then
+                            seg(6 downto 0) <= "1000000"; 
+               elsif cuenta4ms= "11" then
+                            seg(6 downto 0) <= "1111001"; 
+					else
+						seg(6 downto 0) <= "1111111"; 
+               end if; 
+ -------------------- VELOCIDAD DE ROTACION 3-------------             
+        when vel_3 =>  -- Muestra en el display U- "
+              if   cuenta4ms= "00" then                        
+                            seg(6 downto 0) <= "1000001";
+               elsif cuenta4ms= "01" then
+                            seg(6 downto 0) <= "0111111";
+               elsif cuenta4ms= "10" then
+                            seg(6 downto 0) <= "1000000"; 
+               elsif cuenta4ms= "11" then
+                            seg(6 downto 0) <= "0110000"; 
+					else
+						seg(6 downto 0) <= "1111111"; 
+               end if; 
+		end case;  
+end process;
+
+--/////////////////////////////////////////////DETECTORES DE FLANCOS////////////////////////////////////////////////////////////
+ derech: Process (reset, clk) -- Detectores de flanco
+begin
+     if reset = '1' then
+         BTN0_DER1 <= '0';
+         BTN0_DER2 <= '0';
+         BTN0_IZQ1 <= '0';
+         BTN0_IZQ2 <= '0';
+			btn_mas_reg1 <='0';
+         btn_mas_reg2 <='0';             
+         btn_menos_reg1 <='0';
+         btn_menos_reg2 <='0';  
+     elsif clk'event and clk ='1' then
+         BTN0_DER1 <= BTND;
+         BTN0_DER2 <= BTN0_DER1;
+         BTN0_IZQ1 <= BTNI;
+         BTN0_IZQ2 <= BTN0_IZQ1;
+         btn_mas_reg1 <= btn_mas;
+         btn_mas_reg2 <= btn_mas_reg1;
+         btn_menos_reg1 <= btn_menos;
+         btn_menos_reg2 <= btn_menos_reg1;
+     end if;
+end process;
+ 
+boton_der <= '1' when (BTN0_DER1 = '1' and BTN0_DER2='0') else '0';-- DETECCIÓN DE FLANCO DE SUBIDA, PARA SACAR LA SEÑAL btn_der
+boton_izq <= '1' when (BTN0_IZQ1 = '1' and BTN0_IZQ2='0') else '0';
+pulso_btn_mas <= '1' when (btn_mas_reg1 = '1' and btn_mas_reg2 ='0') else '0';
+pulso_btn_menos <= '1' when (btn_menos_reg1 = '1' and btn_menos_reg2 ='0') else '0';
+
+ -- proceso para guardar el flanco detectado
+   bies_T : process(reset, clk)
+     begin
+     if reset='1' then
+        senal_mas <='0';
+		  senal_menos<= '0';
+     elsif clk' event and clk='1' then
+     if pulso_btn_mas= '1' and pulso_btn_menos = '0' then
+        senal_mas <= not senal_mas;
+		  senal_menos <= '0';
+		elsif pulso_btn_mas= '0' and pulso_btn_menos = '1' then
+		  senal_mas <= '0';
+		  senal_menos <= not senal_menos;
+        end if;
+        end if;
+     end process;   
+
+----//////////////////////////////////////////////////////////////////////////////////////////////
+  P_mili: process (reset,clk)
+begin
+    if reset = '1' then 
+        mili <= 0;
+        s1mili <= '0'; 
+    elsif clk'event and clk = '1' then 
+        if mili = cimilis-1 then 
+            mili <= 0;
+            s1mili <= '1';
+        else
+            mili <= mili + 1;
+            s1mili <= '0';
+        end if;
+    end if;
+end process;
+
+  p_cuenta4ms: process (reset, clk)
+    begin
+       if reset = '1' then
+           cuenta4ms <= (others => '0');
+       elsif clk' event and clk = '1' then 
+           if s1mili = '1' then
+               if cuenta4ms = 6 then 
+                   cuenta4ms <= (others => '0');
+               else
+                   cuenta4ms <= cuenta4ms +1 ;
+               end if;
+           end if;
+      end if;
+    end process;
+	 
+--/////////////////////////////////////////////////Decodificador que asigna el valor del ánodo
+ an <= "0111" when cuenta4ms="00" else
+       "1011" when cuenta4ms="01" else
+       "1101" when cuenta4ms="10" else
+       "1110" when cuenta4ms="11";
+
+Proceso_activa_led : process(reset, clk, estado_actual)
+   begin
+     if reset='1' then
+        LED1 <='0';
+		  LED2 <='0';
+     elsif clk' event and clk='1' then
+     if s_camara = '1' or s_deslizadera='1' then
+		LED2 <= senal_mas;
+		LED1 <= senal_menos;
+		else
+        LED1 <='0';
+		  LED2 <='0';
+        end if;
+        end if;
+     end process;	 
+
+--procesos activados segun el estado
+Proceso_activa_x : process(reset, clk, estado_actual)
+   begin
+     if reset='1' then
+        s_deslizadera <='0';
+     elsif clk' event and clk='1' then
+     if estado_actual = pos_desli then
+        s_deslizadera <='1';
+		else
+		   s_deslizadera <='0';
+        end if;
+        end if;
+     end process;	 
+			 
+Proceso_activa_y : process(reset, clk, estado_actual)
+     begin
+     if reset='1' then
+       s_camara <='0';
+     elsif clk' event and clk='1' then
+     if estado_actual = pos_cam then
+       s_camara <='1';
+		else
+		 s_camara <='0';
+        end if;
+        end if;
+     end process;
+			 		 
+ --///////////////////////////////////// PROCESO ENDSTOP ///////////////////////////////////////////////////  
+  stop_fin_x<= '1' when (endstop_x_mas = '0'   and dir_in_x ='1') else '0';   -- El final de carrera activo a nivel bajo porque esta conectado en circuito cerrado, es decir siempre estám a 1 hasta que toque.
+  stop_inicio_x <= '1' when (endstop_x_menos = '0' and dir_in_x ='0') else '0';
+  
+  stop_fin_y <= '1' when (endstop_y_mas = '0'   and dir_in_y ='1') else '0';   -- El final de carrera activo a nivel bajo porque esta conectado en circuito cerrado, es decir siempre estám a 1 hasta que toque.
+  stop_inicio_y <= '1' when (endstop_y_menos = '0' and dir_in_y ='0') else '0'; 
+
+--////////////////////////////////////////PROCESO AJUSTE CAMARA/////////////////////////////////////////					 
+Proceso_step_y : process (clk,reset) 
+  begin
+    if reset= '1' then
+    step_in_y <= '0';
+    cuenta_step_y <= (others =>'0'); 
+    elsif clk' event and clk = '1' then 
+     if activa_step_y = '1' and stop_fin_y = '0' and stop_inicio_y = '0' then 
+                    if cuenta_step_y = ty-1 then  -- hay una señal step cada ta
+                        cuenta_step_y <= (others =>'0');
+                        step_in_y <= not step_in_y;
+                     else
+                       cuenta_step_y <= cuenta_step_y + 1;
+                     end if;
+      else 
+          step_in_y <= '0';  
+				cuenta_step_y <= (others =>'0');
+            end if;          
+      end if;
+  end process;
+  
+  	proceso_dirección_Y: process (clk, reset) 
+begin                                            
+    if reset = '1' then
+        dir_in_y <= '0';
+        activa_step_y <= '0';
+    elsif clk'event and clk = '1' then
+     if s_camara = '1' then  --señal que proporcionará el estado
+         if senal_menos = '0' and senal_mas = '1' then
+				 dir_in_y <= '0';
+             activa_step_y <= '1';
+          elsif senal_menos = '1' and senal_mas = '0' then
+				 dir_in_y <= '1';
+            activa_step_y  <= '1';
+      else 
+				 dir_in_y  <= '0';
+            activa_step_y  <= '0';
+          end if;
+          else
+				dir_in_y <= '0';
+        activa_step_y <= '0';
+     end if;
+	 end if;
+	end process;
+			 		 
+--//////////////////////////////////////////////////////PROCESO AJUSTE DESLIZADERA	////////////////////////////////////////////////////////			
+	proceso_dirección_X: process (clk, reset) 
+begin                                            
+    if reset = '1' then
+        dir_in_x <= '0';
+        activa_step_x <= '0';		  
+    elsif clk'event and clk = '1' then
+     if s_deslizadera = '1'then 
+         if senal_menos = '1' and senal_mas = '0'  then
+             dir_in_x <= '0';
+             activa_step_x <= '1';
+          elsif senal_menos = '0' and senal_mas = '1' then
+             dir_in_x <= '1';
+            activa_step_x  <= '1';
+      else 
+                 dir_in_x  <= '0';
+            activa_step_x  <= '0';
+          end if;
+          else
+           dir_in_x <= '0';
+        activa_step_x <= '0';
+     end if;
+	 end if;
+	end process;
+	
+Proceso_ajuste_step : process (clk,reset) 
+  begin
+    if reset= '1' then
+    step_in_x <= '0';
+    cuenta_step_x <= (others =>'0');
+    
+    elsif clk' event and clk = '1' then 
+     if activa_step_x = '1' and stop_fin_x = '0' and stop_inicio_x = '0' then 
+                    if cuenta_step_x = ta-1 then  -- hay una señal step cada ta
+                        cuenta_step_x <= (others =>'0');
+                        step_in_x <= not step_in_x;
+                     else
+                       cuenta_step_x <= cuenta_step_x + 1;
+                     end if;
+      else 
+          step_in_x <= '0'; 
+         cuenta_step_x <= (others =>'0');
+            end if;          
+      end if;
+  end process;
+  
+       STEP_x <= step_in_x;
+		  DIR_x <= dir_in_x;	
+
+
+--//////////////////////////////////////////////////////PROCESO ROTACION////////////////////////////////////////////////////////		
+
+Proceso_activa_r : process(reset, clk, estado_actual)
+   begin
+     if reset='1' then
+        s_escanear<='0';
+     elsif clk' event and clk='1' then
+     if estado_actual = escanear then
+        s_escanear <='1';
+		else
+		   s_escanear <='0';
+        end if;
+        end if;
+     end process;	 
+
+ dir_in_r <= '0';
+ DIR_r <= dir_in_r;
+ 
+ Proceso_step_rotacion : process (clk,reset)
+  begin
+    if reset= '1' then
+    step_in_r <= '0';
+    cuenta_step_r <= (others =>'0');
+	  s_paso_r <= '0'; 
+    elsif clk' event and clk = '1' then 
+     if s_escanear = '1' and stop_r = '0' then 
+                    if cuenta_step_r = tr-1 then  
+                        cuenta_step_r <= (others =>'0');
+                        step_in_r <= not step_in_r;
+								s_paso_r <= '1';
+                     else
+                       cuenta_step_r <= cuenta_step_r + 1;
+							  s_paso_r <= '0';
+                     end if;
+        else 
+          step_in_r <= '0';
+          cuenta_step_r <= (others =>'0');
+			 s_paso_r <= '0';
+         end if;          
+      end if;
+  end process;
+       STEP_R <= step_in_r;
+       
+ --/// CONTADOR DE PASOS
+ contador_rev: process (clk, reset, stop_vertical)  -- Mientras esta rotando esta contando revoluciones 
+ begin
+ if reset = '1' or stop_vertical ='1' then
+         cuenta_pasos_r<= (others => '0'); 
+			stop_r <= '0';
+  elsif clk'event and clk = '1' then
+    if s_paso_r = '1' then
+         if cuenta_pasos_r = pasos_rev - 1 and stop_vertical = '0' then   
+            stop_r <= '1';
+            cuenta_pasos_r <= (others => '0');
+          else
+            stop_r <= '0';
+            cuenta_pasos_r <= cuenta_pasos_r +1;
+          end if;
+
+      end if;
+  end if;
+ end process;
+
+
+--//////////////////////////////////////////////////////PROCESO CAMARA 2 ////////////////////////////////////////////////////////		
+
+ Proceso_cam_vertical : process (clk,reset)
+  begin
+    if reset= '1' then
+    step_in_vertical <= '0';
+	 cuenta_step_vertical <= (others =>'0');
+	 s_paso_vertical <= '0';
+    elsif clk' event and clk = '1' then 
+     if s_escanear = '1' and stop_r = '1' then 
+                    if cuenta_step_vertical = t_vertical -1 then  
+                        cuenta_step_vertical <= (others =>'0');
+                        step_in_vertical <= not step_in_vertical;
+								s_paso_vertical <= '1';
+                     else
+                       cuenta_step_vertical <= cuenta_step_vertical + 1;
+							  s_paso_vertical <= '0';
+                     end if;
+      else 
+         step_in_vertical <= '0';
+         cuenta_step_vertical <= (others =>'0');
+			s_paso_vertical <= '0';
+            end if;          
+      end if;
+  end process;
+--
+
+PASO_CAM: process (clk, reset, stop_r)  
+begin
+ if reset = '1' or stop_r ='0' then
+         cuenta_pasos_vertical <= (others => '0'); 
+			stop_vertical <= '0';
+  elsif clk'event and clk = '1' then
+    if s_paso_vertical = '1' then
+         if cuenta_pasos_vertical = pasos_verticales - 1 then   
+            stop_vertical <= '1';
+            cuenta_pasos_vertical <= (others => '0');
+          else
+            stop_vertical <= '0';
+            cuenta_pasos_vertical <= cuenta_pasos_vertical +1;
+          end if;
+      end if;
+  end if;
+ end process;
+
+ Proceso_cam_r : process (clk,reset)
+  begin
+    if reset= '1' then
+     STEP_y <= '0';
+    elsif clk' event and clk = '1' then 
+     if estado_actual = pos_cam then 
+			 STEP_y <= step_in_y;		 	
+			 DIR_y  <= dir_in_y;	
+	 else
+	       STEP_y <= step_in_vertical;	 	
+			 DIR_y  <= '0';	
+  end if;
+  end if;
+  end process;
+
+
+
+
+	 
+end Behavioral;
